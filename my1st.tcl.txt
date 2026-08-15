@@ -1,0 +1,494 @@
+### My 1st tcl for magic.
+### Author: Manuel Salim Maza. mauel.salim@circuify.com  msalimm@hotmail.com
+### Date:   Sept 11th, 2025.
+### In magic comand window "source my1st.tcl"
+### grid 0.01um 0.01um
+### grid		turn grid lines on/off
+### snap user		user grid for snappin
+
+proc HelloWorld {} {
+  puts "Hello World!"
+}
+
+proc tclinit {} {
+  source my1st.tcl
+  grid 0.01um 0.01um
+# grid
+  snap user
+}
+
+proc draw_square {x y size layer} {
+  box $x $y [expr $x+$size] [expr $y+$size]
+  paint $layer
+}
+
+proc draw_con {x y w l layer} {
+  ### ndif section.
+  set x1    [expr $x-$l/2]
+  set x2    [expr $x1+$l] 
+  set y1    [expr $y-$w/2]
+  set y2    [expr $y1+$w] 
+  box $x1 $y1 $x2 $y2
+  paint ndiff
+
+  ### ndc section.
+  set con_size  17
+  set con_space 19
+  set con_n [expr ($w+2) / ($con_size+$con_space)]
+
+  set x1    [expr $x-$con_size/2]
+  set x2    [expr $x1+$con_size]
+  set y1    [expr $y-int((($con_n-1)/2.0)*($con_size+$con_space))-($con_size/2)]
+
+  for {set i 0} {$i < $con_n} {incr i} {
+    box $x1 [expr $y1+$i*($con_size+$con_space)] $x2 [expr $y1+$i*($con_size+$con_space)+$con_size]
+    paint ndc
+  }
+
+  ### li section
+  set li_over 8
+  box [expr $x1-$li_over] [expr $y1-$li_over] [expr $x2+$li_over] [expr $y1+($i-1)*($con_size+$con_space)+$con_size+$li_over] 
+  paint li
+
+  ### m1 and mcon section
+  if {![string compare $layer "m1"] || ![string compare $layer "m2"]} {
+    set m1_over 8
+    box [expr $x1-$m1_over] [expr $y1-$m1_over] [expr $x2+$m1_over] [expr $y1+($i-1)*($con_size+$con_space)+$con_size+$m1_over] 
+    paint m1
+    for {set i 0} {$i < $con_n} {incr i} {
+      box $x1 [expr $y1+$i*($con_size+$con_space)] $x2 [expr $y1+$i*($con_size+$con_space)+$con_size]
+      paint mcon
+    }
+  }
+
+  ### m2 and m2con section
+  if {![string compare $layer "m2"]} {
+    set con_size_left   5
+    set con_size_right 21
+    set m2_over 8
+    box [expr $x1-$m2_over] [expr $y1-$m2_over] [expr $x2+$m2_over] [expr $y1+($i-1)*($con_size+$con_space)+$con_size+$m2_over] 
+    paint m2
+    for {set i 0} {$i < $con_n} {incr i} {
+      box [expr $x1-$con_size_left] [expr $y1+$i*($con_size+$con_space)-$con_size_left] [expr $x1+$con_size_right] [expr $y1+$i*($con_size+$con_space)+$con_size_right]
+      paint m2con
+    }
+  }
+
+}
+
+proc draw_con_test {} {
+  view -300 -250 300 210
+  box  -300 -250 300 210
+  erase
+  ###        x   y   w  l  layer
+  draw_con -250  90  35 35 li
+  draw_con -150  90  55 35 m1
+  draw_con  -50  90  75 35 m2
+  draw_con   50  90  95 35 li
+  draw_con  150  90 115 35 m1
+  draw_con  250  90 135 35 m2
+  draw_con  250 -90 155 35 li
+  draw_con  150 -90 175 35 m1
+  draw_con   50 -90 195 35 m2
+  draw_con  -50 -90 215 35 li
+  draw_con -150 -90 235 35 m1
+  draw_con -250 -90 255 35 m2
+}
+
+########################################
+### Transistor section.
+########################################
+
+proc draw_tran {x y w l nfing layer} {
+  ### ndif section. Need con_size and con_space to match with con_test.
+  set con_size  17
+  set con_space 19
+
+  set w_grid [expr int($w*100)]
+  set l_grid [expr int($l*100)]
+ 
+  set x1    [expr $x-(($con_size+$con_space-1)+$nfing*($con_size+$con_space-1+$l_grid))/2]
+  set x2    [expr $x+(($con_size+$con_space-1)+$nfing*($con_size+$con_space-1+$l_grid))/2] 
+  set y1    [expr $y-int($w_grid/2)]
+  set y2    [expr $y1+$w_grid] 
+  box $x1 $y1 $x2 $y2
+  paint ndiff
+
+  ### poly section.
+  set poly_over  13
+
+  for {set i 0} {$i < $nfing} {incr i} {
+    set xpoly [expr $x1+$con_size+$con_space-1+$i*($con_size+$con_space-1+$l_grid)]
+    box $xpoly [expr $y1-$poly_over] [expr $xpoly+$l_grid] [expr $y2+$poly_over]
+    paint poly
+  }
+
+  ### con section
+  for {set i 0} {$i < ($nfing+1)} {incr i} {
+    set x_con [expr $x1+($con_size+$con_space-1)/2+$i*($con_size+$con_space-1+$l_grid)]
+    draw_con $x_con $y $w_grid 35 $layer
+  }
+}
+
+proc draw_tran_test {} {
+  view -400 -250 400 300
+  box  -400 -250 400 300
+  erase
+  ###         x   y   w   l nfing layer
+  draw_tran  120  90 2.0 0.30 1 li
+  draw_tran -120  90 1.5 0.30 2 m1
+  draw_tran -120 -90 1.0 0.15 3 m2
+  draw_tran  120 -90 0.5 0.15 4 li
+}
+
+proc draw_tran_jog {x y wlist llist layerlist} {
+  set poly_over  13
+  set x_con      $x
+  for {set i 0} {$i < [llength $layerlist]} {incr i} {
+    ### con section
+    if {$i == 0} {
+      set wcon [lindex $wlist 0]
+    } elseif {$i == [llength $layerlist]-1 } {
+      set wcon [lindex $wlist [expr [llength $wlist]-1]]
+    } else {
+      set wcon [expr {min([lindex $wlist $i-1],[lindex $wlist $i])}]
+    }
+    draw_con $x_con $y [expr int(100*$wcon)] 35 [lindex $layerlist $i]
+
+    ### poly section. And ndiff underneath.
+    if {$i < [llength $llist]} {
+      set x_con  [expr $x_con+18]
+      set x_con2 [expr $x_con+100*[lindex $llist $i]]
+      set wcon [lindex $wlist $i]
+      box [expr $x_con-25] [expr $y-$wcon*50] [expr $x_con2+25] [expr $y+$wcon*50] 
+      paint ndiff
+      box $x_con [expr $y-$wcon*50-$poly_over] $x_con2 [expr $y+$wcon*50+$poly_over] 
+      paint poly
+      set x_con  [expr $x_con2+17]
+    }
+  }
+}
+
+proc draw_tran_jog_test {} {
+  view -400 -250 600 250
+  box  -400 -350 600 350
+  erase
+  ###             x    y  wlist                  llist                       layerlist
+  draw_tran_jog -300  105 [list 1.8 1.4 1.0 0.6] [list 0.15 0.15 0.15 0.15] [list li m1 m2 li m1]
+  draw_tran_jog -300 -105 [list 0.6 1.0 1.4 1.8] [list 0.15 0.15 0.15 0.15] [list m1 m1 m1 m1 m1]
+  draw_tran_jog    0  105 [list 0.6 1.4 1.4 0.6] [list 0.15 0.30 0.30 0.15] [list m2 m2 m2 m2 m2]
+  draw_tran_jog    0 -105 [list 1.4 0.6 0.6 1.4] [list 0.15 0.30 0.30 0.15] [list m2 m1 m2 m1 m2]
+  draw_tran_jog  300  105 [list 0.6 1.4 0.6 1.4] [list 0.15 0.20 0.25 0.30] [list li m1 m2 li m1]
+  draw_tran_jog  300 -105 [list 1.4 0.6 1.4 0.6] [list 0.30 0.25 0.20 0.15] [list m1 m1 m1 m1 m1]
+}
+
+proc draw_poly_con {x y con_n layer} {
+  ### pc section.
+  set con_size  17
+  set con_space 19
+
+  set x1    [expr $x-$con_size/2]
+  set x2    [expr $x1+$con_size]
+  set y1    [expr $y-int((($con_n-1)/2.0)*($con_size+$con_space))-($con_size/2)]
+
+  for {set i 0} {$i < $con_n} {incr i} {
+    box $x1 [expr $y1+$i*($con_size+$con_space)] $x2 [expr $y1+$i*($con_size+$con_space)+$con_size]
+    paint pc
+  }
+  box [expr $x1-6] [expr $y1-8] [expr $x2+6] [expr $y1+($i-1)*($con_size+$con_space)+$con_size+8]
+  paint poly
+  paint li
+  
+  ### m1 and mcon section
+  if {![string compare $layer "m1"] || ![string compare $layer "m2"]} {
+    set m1_over 8
+    box [expr $x1-$m1_over+2] [expr $y1-$m1_over] [expr $x2+$m1_over-2] [expr $y1+($i-1)*($con_size+$con_space)+$con_size+$m1_over] 
+    paint m1
+    for {set i 0} {$i < $con_n} {incr i} {
+      box $x1 [expr $y1+$i*($con_size+$con_space)] $x2 [expr $y1+$i*($con_size+$con_space)+$con_size]
+      paint mcon
+    }
+  }
+
+  ### m2 and m2con section
+  if {![string compare $layer "m2"]} {
+    set con_size_left   5
+    set con_size_right 21
+    set m2_over 8
+    box [expr $x1-$m2_over+2] [expr $y1-$m2_over] [expr $x2+$m2_over-2] [expr $y1+($i-1)*($con_size+$con_space)+$con_size+$m2_over] 
+    paint m2
+    for {set i 0} {$i < $con_n} {incr i} {
+      box [expr $x1-$con_size_left] [expr $y1+$i*($con_size+$con_space)-$con_size_left] [expr $x1+$con_size_right] [expr $y1+$i*($con_size+$con_space)+$con_size_right]
+      paint m2con
+    }
+  }
+
+}
+
+proc draw_tran_poly_con {x y w l nfing layer top bottom layer_pc} {
+  ### draw_tran section. 
+  draw_tran $x $y $w $l $nfing $layer
+
+  ### draw_poly_con section. Need con_size and con_space to match with con_test.
+  set con_size  17
+  set con_space 19
+
+  set w_grid [expr int($w*100)]
+  set l_grid [expr int($l*100)]
+ 
+  set x1    [expr $x-(($con_size+$con_space-1)+$nfing*($con_size+$con_space-1+$l_grid))/2]
+  set y1    [expr $y-int($w_grid/2)-$bottom*($con_size+$con_space)/2-11]
+  set y2    [expr $y+int($w_grid/2)+$top*($con_size+$con_space)/2+11]
+
+  set poly_over  13
+
+  if {$top > 0} {
+    for {set i 0} {$i < $nfing} {incr i} {
+      set xpoly [expr $x1+$con_size+$con_space-1+$i*($con_size+$con_space-1+$l_grid)]
+      draw_poly_con [expr $xpoly+$l_grid/2] $y2 $top $layer_pc
+    }
+  }
+
+  if {$bottom > 0} {
+    for {set i 0} {$i < $nfing} {incr i} {
+      set xpoly [expr $x1+$con_size+$con_space-1+$i*($con_size+$con_space-1+$l_grid)]
+      draw_poly_con [expr $xpoly+$l_grid/2] $y1 $bottom $layer_pc
+    }
+  }
+
+}
+
+proc draw_tran_poly_con_test {} {
+  view -400 -350 400 400
+  box  -400 -350 600 400
+  erase
+  ###                  x    y   w   l nfing layer top bottom layer_pc
+  draw_tran_poly_con  120  170 2.0 0.30 1   li     2   2     l1
+  draw_tran_poly_con -120  170 1.5 0.30 2   m1     1   1     m1
+  draw_tran_poly_con -120 -170 1.0 0.15 3   m2     2   2     m2
+  draw_tran_poly_con  120 -170 0.5 0.15 4   li     2   3     l1
+}
+
+########################################
+### Metal bus section.
+########################################
+
+proc draw_busi_hori {x y w l nsignals spacesig layer} {
+  set w_grid        [expr int($w*100)]
+  set l_grid        [expr int($l*100)]
+  set spacesig_grid [expr int($spacesig*100)]
+
+  for {set i 0} {$i < $nsignals} {incr i} {
+    box $x [expr $y+$i*($w_grid+$spacesig_grid)] [expr $x+$l_grid] [expr $y+$w_grid+$i*($w_grid+$spacesig_grid)]
+    paint $layer
+  }
+}
+
+proc draw_busi_hori_test {} {
+  view -300 -500 3500 8500
+  box  -300 -500 3500 8500
+  erase
+  ###               x    y   w l sig spa lay
+  draw_busi_hori    0    0 0.4 10 16 0.4 m2
+  draw_busi_hori 1200 1350 0.4 20  8 0.4 m3
+}
+
+proc draw_busesi_hori {x y w l nsignals spacesig layer nbuses spacebus} {
+  set w_grid        [expr int($w*100)]
+  set l_grid        [expr int($l*100)]
+  set spacesig_grid [expr int($spacesig*100)]
+  set spacebus_grid [expr int(($spacebus-$spacesig)*100)]
+
+  for {set j 0} {$j < $nbuses} {incr j} {
+    for {set i 0} {$i < $nsignals} {incr i} {
+      box $x [expr $y+$i*($w_grid+$spacesig_grid)+$j*($spacebus_grid+$nsignals*(($w_grid+$spacesig_grid)))] [expr $x+$l_grid] [expr $y+$w_grid+$i*($w_grid+$spacesig_grid)+$j*($spacebus_grid+$nsignals*(($w_grid+$spacesig_grid)))]
+      paint $layer
+    }
+  }
+}
+
+proc draw_busesi_hori_test {} {
+  view -300 -500 3500 8500
+  box  -300 -500 3500 8500
+  erase
+  ###                 x    y   w l sig spa lay nbus spa
+  draw_busesi_hori    0    0 0.4 10 16 0.4 m2  3  1.2
+  draw_busesi_hori 1200 1350 0.4 20  8 0.4 m3  2  2.0
+}
+
+proc draw_busi_vert {x y w l nsignals spacesig layer} {
+  set w_grid        [expr int($w*100)]
+  set l_grid        [expr int($l*100)]
+  set spacesig_grid [expr int($spacesig*100)]
+
+  for {set i 0} {$i < $nsignals} {incr i} {
+    box [expr $x+$i*($w_grid+$spacesig_grid)] $y [expr $x+$w_grid+$i*($w_grid+$spacesig_grid)] [expr $y+$l_grid]
+    paint $layer
+  }
+}
+
+proc draw_busi_vert_test {} {
+  view -300 -500 3500 8500
+  box  -300 -500 3500 8500
+  erase
+  ###               x    y   w l sig spa lay
+  draw_busi_vert    0    0 0.4 10 16 0.4 m2
+  draw_busi_vert 1200 1350 0.4 20  8 0.4 m3
+}
+
+proc draw_busesi_vert {x y w l nsignals spacesig layer nbuses spacebus} {
+  set w_grid        [expr int($w*100)]
+  set l_grid        [expr int($l*100)]
+  set spacesig_grid [expr int($spacesig*100)]
+  set spacebus_grid [expr int(($spacebus-$spacesig)*100)]
+
+  for {set j 0} {$j < $nbuses} {incr j} {
+    for {set i 0} {$i < $nsignals} {incr i} {
+      box [expr $x+$i*($w_grid+$spacesig_grid)+$j*($spacebus_grid+$nsignals*(($w_grid+$spacesig_grid)))] $y [expr $x+$w_grid+$i*($w_grid+$spacesig_grid)+$j*($spacebus_grid+$nsignals*(($w_grid+$spacesig_grid)))] [expr $y+$l_grid]
+      paint $layer
+    }
+  }
+}
+
+proc draw_busesi_vert_test {} {
+  view -300 -500 3500 8500
+  box  -300 -500 3500 8500
+  erase
+  ###                 x    y   w l sig spa lay nbus spa
+  draw_busesi_vert    0    0 0.4 10 16 0.4 m2  3  1.2
+  draw_busesi_vert 1200 1350 0.4 20  8 0.4 m3  2  2.0
+}
+
+###Im focusing in via2 but later can be any via.
+proc draw_via {x y wl space coverage nx ny layer1 layer2 layervia} {
+  set wl_grid    [expr int($wl*100)]
+  set space_grid [expr int($space*100)]
+  set cover_grid [expr int($coverage*100)]
+
+  set x1    [expr $x-int((($nx-1)/2.0)*($wl_grid+$space_grid))-($wl_grid/2)]
+  set y1    [expr $y-int((($ny-1)/2.0)*($wl_grid+$space_grid))-($wl_grid/2)]
+
+  for {set j 0} {$j < $ny} {incr j} {
+    for {set i 0} {$i < $nx} {incr i} {
+      box [expr $x1+$i*($wl_grid+$space_grid)] [expr $y1+$j*($wl_grid+$space_grid)] [expr $x1+$i*($wl_grid+$space_grid)+$wl_grid] [expr $y1+$j*($wl_grid+$space_grid)+$wl_grid] 
+      paint $layervia
+    }
+  }
+
+  box [expr $x1-$cover_grid] [expr $y1-$cover_grid] [expr $x1+$i*($wl_grid+$space_grid)-$space_grid+$cover_grid] [expr $y1+$j*($wl_grid+$space_grid)-$space_grid+$cover_grid]
+  paint $layer1
+  paint $layer2
+
+}
+
+proc draw_via_test {} {
+  view -300 -300 300 300
+  box  -300 -300 300 300
+  erase
+  ###        x    y    wl space coverage nx ny lay1 lay2 layvia
+  draw_via  150  150 0.28 0.14  0.06     1  1  m2   m3   m3con
+  draw_via    0  150 0.28 0.14  0.06     2  1  m2   m3   m3con
+  draw_via -150  150 0.28 0.14  0.06     3  1  m2   m3   m3con
+  draw_via  150    0 0.28 0.14  0.06     1  2  m2   m3   m3con
+  draw_via    0    0 0.28 0.14  0.06     2  2  m2   m3   m3con
+  draw_via -150    0 0.28 0.14  0.06     3  2  m2   m3   m3con
+  draw_via  150 -150 0.28 0.14  0.06     1  3  m2   m3   m3con
+  draw_via    0 -150 0.28 0.14  0.06     2  3  m2   m3   m3con
+  draw_via -150 -150 0.28 0.14  0.06     3  3  m2   m3   m3con
+}
+
+###proc draw_busl {x y nsignals w1 l1 spa1 layer1 w2 l2 spa2 layer2} {
+  proc draw_busl {x y nsignals w1 l1 spa1 layer1 w2 l2 spa2 layer2 nx ny layervia} {
+  set w1_grid    [expr int($w1*100)]
+  set l1_grid    [expr int($l1*100)]
+  set spa1_grid  [expr int($spa1*100)]
+  set w2_grid    [expr int($w2*100)]
+  set l2_grid    [expr int($l2*100)]
+  set spa2_grid  [expr int($spa2*100)]
+
+  for {set i 0} {$i < $nsignals} {incr i} {
+    box [expr $x+$i*($w1_grid+$spa1_grid)] [expr $y+$i*($w2_grid+$spa2_grid)] [expr $x+$w1_grid+$i*($w1_grid+$spa1_grid)] [expr $y+$l1_grid]
+    paint $layer1
+    box [expr $x+$i*($w1_grid+$spa1_grid)] [expr $y+$i*($w2_grid+$spa2_grid)] [expr $x+$l2_grid] [expr $y+$w2_grid+$i*($w2_grid+$spa2_grid)]
+    paint $layer2
+
+    ### Need to make valid for more via levels, number of vias and 2Vias cases.
+    #box [expr $x+$i*($w1_grid+$spa1_grid)+6] [expr $y+$i*($w2_grid+$spa2_grid)+6] [expr $x+$i*($w1_grid+$spa1_grid)+34] [expr $y+$i*($w2_grid+$spa2_grid)+34] 
+    #paint m3con
+    
+    ###        x                                             y                                             wl space coverage nx ny lay1 lay2 layvia
+   #draw_via [expr $x+$w1_grid/2+$i*($w1_grid+$spa1_grid)] [expr $y+$w2_grid/2+$i*($w2_grid+$spa2_grid)] 0.28 0.14  0.06     1  1  m2   m3   m3con
+    draw_via [expr $x+$w1_grid/2+$i*($w1_grid+$spa1_grid)] [expr $y+$w2_grid/2+$i*($w2_grid+$spa2_grid)] 0.28 0.14  0.06   $nx  $ny $layer1 $layer2 $layervia
+  }
+}
+
+proc draw_busl_test {} {
+  view -2200 -1100 2200 1100
+  box  -2200 -1100 2200 1100
+  erase
+  ####         x    y nsignals  w1 l1 spa1 layer1 w2 l2 spa2 layer2 nx ny layervia
+  draw_busl   500  500   4     0.4  5 0.4  m2    0.4  5 0.4  m3     1  1  m3con
+  draw_busl  1500  500   4     0.4  5 0.4  m2    0.4  5 0.51 m3     1  2  m3con
+
+  draw_busl  -500  500   4     0.4 -2 0.4  m2    0.4  5 0.4  m3     1  1  m3con
+  draw_busl -1500  500   4     0.4 -2 0.4  m2    0.4  5 0.51 m3     1  2  m3con
+
+  draw_busl  -500 -500   4     0.4 -2 0.4  m2    0.4 -2 0.4  m3     1  1  m3con
+  draw_busl -1500 -500   4     0.4 -2 0.4  m2    0.4 -2 0.51 m3     1  2  m3con
+
+  draw_busl   500 -500   4     0.4  5 0.4  m2    0.4 -2 0.4  m3     1  1  m3con
+  draw_busl  1500 -500   4     0.4  5 0.4  m2    0.4 -2 0.51 m3     1  2  m3con
+}
+
+
+  proc draw_busl_scram {x y nsignals w1 l1 spa1 layer1 w2 l2 spa2 layer2 nx ny layervia orderlist} {
+  set w1_grid    [expr int($w1*100)]
+  set l1_grid    [expr int($l1*100)]
+  set spa1_grid  [expr int($spa1*100)]
+  set w2_grid    [expr int($w2*100)]
+  set l2_grid    [expr int($l2*100)]
+  set spa2_grid  [expr int($spa2*100)]
+
+  for {set i 0} {$i < $nsignals} {incr i} {
+    box [expr $x+$i*($w1_grid+$spa1_grid)] [expr $y+[lindex $orderlist $i]*($w2_grid+$spa2_grid)] [expr $x+$w1_grid+$i*($w1_grid+$spa1_grid)] [expr $y+$l1_grid]
+    paint $layer1
+    box [expr $x+$i*($w1_grid+$spa1_grid)] [expr $y+[lindex $orderlist $i]*($w2_grid+$spa2_grid)] [expr $x+$l2_grid] [expr $y+$w2_grid+[lindex $orderlist $i]*($w2_grid+$spa2_grid)]
+    paint $layer2
+    ###        x                                             y                                                                wl space coverage nx  ny  lay1    lay2    layvia
+    draw_via [expr $x+$w1_grid/2+$i*($w1_grid+$spa1_grid)] [expr $y+$w2_grid/2+[lindex $orderlist $i]*($w2_grid+$spa2_grid)] 0.28 0.14  0.06   $nx $ny $layer1 $layer2 $layervia
+  }
+}
+
+proc draw_busl_scram_test {} {
+  view -2200 -1100 2200 1100
+  box  -2200 -1100 2200 1100
+  erase
+  ####                x    y nsignals  w1 l1 spa1 layer1 w2 l2 spa2 layer2 nx ny layervia orderlist
+  draw_busl_scram    500  500   5     0.4  6 0.4  m2    0.4  5 0.4  m3     1  1  m3con    [list 1 4 3 2 5]
+  draw_busl_scram   1500  500   5     0.4  6 0.4  m2    0.4  5 0.51 m3     1  2  m3con    [list 5 2 3 4 1]
+
+  draw_busl_scram   -500  500   5     0.4 -1 0.4  m2    0.4  5 0.4  m3     1  1  m3con    [list 1 5 2 4 3]
+  draw_busl_scram  -1500  500   5     0.4 -1 0.4  m2    0.4  5 0.51 m3     1  2  m3con    [list 3 4 2 5 1]
+
+  draw_busl_scram   -500 -500   5     0.4 -1 0.4  m2    0.4 -1 0.4  m3     1  1  m3con    [list 5 1 4 2 3]
+  draw_busl_scram  -1500 -500   5     0.4 -1 0.4  m2    0.4 -1 0.51 m3     1  2  m3con    [list 3 2 4 1 5]
+
+  draw_busl_scram    500 -500   5     0.4  6 0.4  m2    0.4 -1 0.4  m3     1  1  m3con    [list 5 4 3 2 1]
+  draw_busl_scram   1500 -500   5     0.4  6 0.4  m2    0.4 -1 0.51 m3     1  2  m3con    [list 1 2 3 4 5]
+}
+
+proc draw_busu_busc_test {} {
+  view -2200 -1100 2200 1500
+  box  -2200 -1100 2200 1500
+  erase 
+  #bus u              x    y nsignals  w1 l1 spa1 layer1 w2 l2 spa2 layer2 nx ny layervia orderlist
+  draw_busl_scram   -500  700   5     0.4  6 0.4  m2    0.4  5 0.51 m3     1  2  m3con    [list 5 4 3 2 1]
+  draw_busl_scram    500  700   5     0.4  6 0.4  m2    0.4 -5 0.51 m3     1  2  m3con    [list 1 2 3 4 5]
+
+  #busc
+  draw_busl_scram  -1000 -700   5     0.4  6 0.4  m2    0.4  5 0.51 m3     1  2  m3con    [list 5 4 3 2 1]
+  draw_busl_scram  -1000    0   5     0.4 -1 0.4  m2    0.4 12 0.51 m3     1  2  m3con    [list 1 2 3 4 5]
+  draw_busl_scram   1000    0   5     0.4 -1 0.4  m2    0.4 -8 0.51 m3     1  2  m3con    [list 5 4 3 2 1]
+  draw_busl_scram   1000 -700   5     0.4  6 0.4  m2    0.4 -1 0.51 m3     1  2  m3con    [list 1 2 3 4 5]
+}
+
