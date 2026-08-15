@@ -1,0 +1,40 @@
+***Models from
+https://cmosedu.com/cmos1/cmosedu_models.txt
+https://www.scribd.com/document/327383206/cmosedu-models-txt
+https://bsim.berkeley.edu/models/bsim4/
+https://class.ece.iastate.edu/djchen/ee501/BSIM470_Manual.pdf
+
+https://electronics.stackexchange.com/questions/487831/using-meas-during-op-for-list-of-values
+
+.step param VAR list val1 val2 val3 ... valn
+
+.meas op RESULT find V(myNode) at VAR = val1		?
+
+.meas OP I_VAR AVG I(VAR)
+.meas RESULT find I(R1) at VAR=val1
+
+********** LTspice notes
+Vov=Vgs-Vth
+Von=Vds-Vdsat
+
+Check as worked in xschem, ngspice:
+.save \\@m\\.xmndiode0\\.msky130_fd_pr__nfet_01v8\\\\\\[Vth\\\\]
+
+https://www.edaboard.com/threads/relationship-between-vdssat-and-vov.52959/
+https://www.edaboard.com/threads/what-is-diference-between-vdsat-vov-veffective-vgh-vth-and-vds.220825/
+https://www.reddit.com/r/ECE/comments/nzm4rh/help_to_understand_vdsat_value_in_analog_circuits/?rdt=56472
+https://sourceforge.net/p/ngspice/discussion/133842/thread/d93731bb/
+http://www.ecircuitcenter.com/AboutSPICE.htm
+https://electronics.stackexchange.com/questions/559429/can-ltspice-compile-bsim4-models
+https://ltwiki.org/index.php?title=SPICE_and_LTspice_Courseware_and_Tutorials
+.{plot,print,display} all
+
+R1=R2=R3=Rload=200
+Rctle=1K
+Cctle=10p
+M1=M2 Wdiff=20u L=130nm
+Mtail1=Mtail2 Wtail=50u L=260nm
+Mdiode1 W=10um L=260nm
+
+https://www.edaboard.com/threads/constant-current-vdsat-values-of-pmos-and-nmos.126963/
+Typical values are VGS−VT values between 0.15 and 0.2 V.
